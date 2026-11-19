@@ -1,0 +1,52 @@
+name: CI
+
+# 見本の本（example/）を本のリポジトリと同じ手順でビルドし，整合性チェックを通す．
+# 本のリポジトリでは，Dependabot が common/ の更新の PR を出し，その本の CI がその本で確かめる．
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  example:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build the example book and check
+        run: make -C example
+
+      - name: Upload PDF
+        uses: actions/upload-artifact@v7
+        with:
+          name: example-pdf
+          path: |
+            example/pdf/original.pdf
+            example/pdf/revised.pdf
+
+  # 各本の情報を emend に入れない（CLAUDE.md）．本の名前はここにも書けないので，
+  # 機械的に見つけられる「ほかのリポジトリへのリンク」だけを検査する．本の題名などは本の側の CI が検査する．
+  no-book-info:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: No links to other repositories of the owner
+        run: |
+          owner="${GITHUB_REPOSITORY%%/*}"
+          # 参照の部分だけを取り出し（末尾の . は文の句点として外す），emend 自身への参照を除く
+          if git grep -hoIiE "${owner}/[A-Za-z0-9_.-]+" -- . ':!.github/workflows/ci.yml' \
+              | sed -E 's/\.+$//' | grep -viE "^${owner}/emend(\.git)?$"; then
+            echo "::error::ほかのリポジトリへの参照がある（各本の情報は emend に入れない）"
+            exit 1
+          fi

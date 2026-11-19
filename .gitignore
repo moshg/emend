@@ -1,0 +1,5 @@
+# 見本の本のビルド結果
+example/tex/build/
+example/pdf/
+# Python のキャッシュ
+__pycache__/
