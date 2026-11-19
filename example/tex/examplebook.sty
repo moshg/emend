@@ -1,0 +1,20 @@
+% examplebook.sty --- 見本の本の見た目．本ごとの sty はこの形で，hyperref，emend の順に読んでから見た目を書く．
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{examplebook}
+\RequirePackage{amsmath,amssymb,amsthm}
+\RequirePackage[hidelinks]{hyperref}% hyperref は emend より先に読む
+\RequirePackage{emend}
+
+% 原書ページ境界のマーカー（\origpage）の余白
+\setlength{\marginparwidth}{2.2\zw}
+\setlength{\marginparsep}{0.6\zw}
+
+% 定理環境（節ごとの共通番号．本文は立体）
+\theoremstyle{definition}
+\newtheorem{theorem}{定理}[section]
+\newtheorem{definition}[theorem]{定義}
+\newtheorem{proposition}[theorem]{命題}
+\newtheorem{example}[theorem]{例}
+\renewcommand\proofname{証明}
+\newcommand\term[1]{{\gtfamily\bfseries #1}}
+\endinput

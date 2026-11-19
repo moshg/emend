@@ -1,0 +1,52 @@
+% 見本の章（修正版）．忠実版を写して直したもの．直した箇所の先頭に \fixat{ID} を置く．
+\chapter{距離}\label{ch:1}
+\origpage{1}
+
+\section{定義}\label{sec:1.1}
+
+\begin{definition}\label{thm:1.1.1}
+集合 $X$ 上の関数 $d\colon X\times X\to[0,\infty)$ が，任意の $x,y,z\in X$ に対して次の 3 つをみたすとき，$d$ を $X$ 上の\term{距離}という．
+\begin{equation}\label{eq:1.1}
+\begin{gathered}
+d(x,y)=0 \iff x=y,\qquad d(x,y)=d(y,x),\\
+d(x,z)\le d(x,y)\fixat{1-01}+d(y,z).
+\end{gathered}
+\end{equation}
+\end{definition}
+
+\begin{proposition}\label{thm:1.1.2}
+任意の $x,y,z\in X$ に対して $|d(x,z)-d(y,z)|\le d(x,y)$ が成り立つ．
+\end{proposition}
+\fixat{1-02}\begin{proof}\supplied{%
+三角不等式 \beqref{eq:1.1} より $d(x,z)\le d(x,y)+d(y,z)$ なので，$d(x,z)-d(y,z)\le d(x,y)$ である．
+$x$ と $y$ を入れ替えれば $d(y,z)-d(x,z)\le d(y,x)$ である．
+対称性より $d(y,x)=d(x,y)$ なので，2 つを合わせて主張を得る．}
+\end{proof}
+
+\begin{proposition}\label{thm:1.1.3}
+$d$ が $X$ 上の距離なら，$d'=\min\{d,1\}$ も $X$ 上の距離である．
+\end{proposition}
+\fixat{1-03}\begin{proof}\rewritten{%
+三角不等式だけを示す．関数 $t\mapsto\min\{t,1\}$ は単調で劣加法的である．
+よって $d'(x,z)\le\min\{d(x,y)+d(y,z),1\}\le d'(x,y)+d'(y,z)$ となる．
+\origpage{2}%
+ここで右辺の各項は $d'$ で置き換えてもよいことに注意する．}
+\end{proof}
+\fixskip{equation}{1}% 書き換えで消した (1.2) の分
+
+後の式の番号は原書と同じである:
+\begin{equation}\label{eq:1.3}
+d'(x,y)\le d(x,y).
+\end{equation}
+
+\begin{example}\label{thm:1.1.4}
+$\mathbb{R}$ 上で $d(x,y)=|x-y|$ は距離である\fixat{1-05}（三角不等式は絶対値の三角不等式）．
+\end{example}
+
+\section{\texorpdfstring{$\varepsilon$}{ε} 近傍}\label{sec:1.2}
+
+\begin{theorem}\label{thm:1.2.1}
+$x\in X$ と $\varepsilon>0$ に対し，集合 $B(x,\varepsilon)=\{y\in X\mid d(x,y)<\varepsilon\}$ は開集合である\fixat{1-06}（注：開集合の定義は本書にない．ここでは通常の定義を仮定する）．
+\end{theorem}
+
+次の章の定理 \bref{thm:2.1.1} で，命題 \bref{thm:1.1.2} を使う．\fixat{1-08}印の付いた文．

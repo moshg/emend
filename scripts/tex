@@ -1,0 +1,61 @@
+#!/bin/sh
+# Run a command in the TeX container, from tex/ of the book repository.
+# Run it from the root of the book repository (make does).
+# Usage: common/scripts/tex latexmk original.tex
+#        common/scripts/tex lualatex --version
+#
+# TeX Live 2026 (scheme-full) from Island of TeX, pinned by tag and digest so
+# that local builds and CI use exactly the same TeX. docker run pulls it on
+# first use (about 2.8 GB). To update it, see docs/texlive.md.
+image=registry.gitlab.com/islandoftex/images/texlive:TL2026-2026-11-01-full@sha256:07e8062637249c4f780ca59f42cc2ed592bc2dc1db4320769406aee3f98aa70e
+#
+# The container sees the whole git work tree that holds the book (the book
+# repository, with emend in common/), so that TeX can read emend.sty there;
+# tex/latexmkrc adds emend's tex/ to TEXINPUTS.
+#
+# The font cache lives in tex/build/ so it survives between runs. In the
+# container's own cache it would be rebuilt by every run, and latexmk would
+# take the new cache files for changed inputs and rerun LuaLaTeX every time.
+# The path is relative to tex/: TeX does not write to absolute paths
+# (openout_any = p), and luaotfload would stop with "no writeable cache path".
+#
+# The container runs as the calling user, so that on Linux the files in
+# tex/build/ belong to that user and not to root. HOME points to a writable
+# directory because that user has no home in the image.
+#
+# Ctrl-C must reach LuaLaTeX itself: latexmk ignores SIGINT while it waits for
+# a run, so --init (tini) forwards the signal to the whole process group
+# (TINI_KILL_PROCESS_GROUP). Otherwise the container would keep writing to
+# build/ after make has returned. This works only with Docker: Podman's --init
+# (catatonit) ignores TINI_KILL_PROCESS_GROUP and signals only its direct
+# child, so under Podman LuaLaTeX runs on to the end (see docs/texlive.md).
+#
+# Without Docker (TEX_LOCAL=1, or when no Docker daemon is reachable), the
+# command runs with the TeX installed on the host instead. That TeX must have
+# LuaLaTeX and luatexja; its version may differ from the pinned one, so the
+# layout can differ slightly from the PDF built by CI.
+set -eu
+book=$(pwd -P)  # git rev-parse と同じく，シンボリックリンクを解いたパス
+if [ ! -d "$book/tex" ]; then
+  echo "scripts/tex: $book/tex がない．本のリポジトリのルートで実行する（make を使う）" >&2
+  exit 1
+fi
+
+if [ "${TEX_LOCAL:-}" = 1 ] || ! docker info >/dev/null 2>&1; then
+  if [ "${TEX_LOCAL:-}" != 1 ]; then
+    echo "scripts/tex: Docker が使えないので，ホストの TeX で実行する（TEX_LOCAL=1 と同じ）" >&2
+  fi
+  cd "$book/tex"
+  mkdir -p build
+  TEXMFCACHE=build/texmf-cache exec "$@"
+fi
+
+top=$(git -C "$book" rev-parse --show-toplevel 2>/dev/null || echo "$book")
+case "$book" in
+  "$top") sub= ;;
+  "$top"/*) sub=/${book#"$top"/} ;;
+  *) echo "scripts/tex: $book が $top の中にない" >&2; exit 1 ;;
+esac
+exec docker run --rm --init --user "$(id -u):$(id -g)" -v "$top:/work" -w "/work$sub/tex" \
+  -e TINI_KILL_PROCESS_GROUP=1 \
+  -e HOME=/tmp -e TEXMFCACHE=build/texmf-cache "$image" "$@"

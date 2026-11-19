@@ -1,0 +1,1 @@
+do '../../tex/latexmkrc' or die "../../tex/latexmkrc を読めない: $@$!\n";
