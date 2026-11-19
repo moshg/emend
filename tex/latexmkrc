@@ -17,7 +17,7 @@ ensure_path('TEXINPUTS', dirname(__FILE__));
 {
   my @files = ((map { glob("$_/*.tex"), glob("$_/*/*.tex") } 'original', 'revised'), glob('notation/*.tex'));
   my $list = join("\n", sort(@files)) . "\n";
-  # 印は版（original.tex，revised.tex）ごとに置く．
+  # 一覧のファイルは版（original.tex，revised.tex）ごとに置く．
   my ($root) = grep { /\.tex$/ } @ARGV;
   my $stamp = "$out_dir/input-files-" . (defined $root ? $root : "all") . ".txt";
   my $old = '';

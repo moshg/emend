@@ -35,7 +35,7 @@ tex/
   main.tex, original.tex, revised.tex
   original/                 各章の本文（忠実版）
   revised/                  各章の本文（修正版）
-  original-sync.json        最後に修正版へ取り込んだ忠実版の記録（make sync が書く）
+  original-sync.json        最後に修正版へ取り込んだときの忠実版の記録（各ファイルの blob ID．make sync が書く）
 corrections/                修正のまとめ
 .gitignore                  tex/build/，pdf/
 .claude/settings.json       セッションの開始時に common/ を取得し，emend の CLAUDE.md を読み込まない
@@ -50,7 +50,7 @@ corrections/                修正のまとめ
 git submodule add https://github.com/moshg/emend.git common
 ```
 
-**Makefile**: 毎回 `common/` を，本のリポジトリが指している版にそろえてから読み込む（まだなければ取得する．pull で参照が進んだのに `common/` が古いまま残り，古い参照をコミットしてしまうのを防ぐ）．本ごとのターゲット（原書の PDF の取得など）は `include` の後に書く（前に書くと `make` の既定のターゲットになる）．先頭のコメントは `make help` に出る．
+**Makefile**: 毎回 `common/` を，本のリポジトリが指しているコミットにそろえてから読み込む（まだなければ取得する．pull で `common/` の指すコミットが進んだのに，手元の `common/` が古いままで，古いコミットを指したままコミットしてしまうのを防ぐ）．本ごとのターゲット（原書の PDF の取得など）は `include` の後に書く（前に書くと `make` の既定のターゲットになる）．先頭のコメントは `make help` に出る．
 
 ```make
 # 『…』TeX 化プロジェクト
@@ -82,7 +82,7 @@ include common/make/book.mk
 ```yaml
 on:
   push:
-    paths: [..., "common", ".gitmodules", ".github/emend-denylist.txt"]   # common/ の参照の更新でも動かす
+    paths: [..., "common", ".gitmodules", ".github/emend-denylist.txt"]   # common/ の指すコミットが変わったときも動かす
   pull_request:
     paths: [..., "common", ".gitmodules", ".github/emend-denylist.txt"]
 ...
@@ -115,7 +115,7 @@ on:
 **`CLAUDE.md`**: 少なくとも次を書く．
 
 - 規約は `common/docs/conventions.md`，進め方は `common/docs/workflow.md`，本ごとの事情は `docs/book.md`．
-- `common/` は emend の submodule で，この中のファイルは本のリポジトリでは編集しない．直すときは emend のブランチで直して PR を出し，マージされてから `common/` の参照を更新する（Dependabot の PR でもよい）．
+- `common/` は emend の submodule で，この中のファイルは本のリポジトリでは編集しない．直すときは emend のブランチで直して PR を出し，マージされてから `common/` が指すコミットを更新する（Dependabot の PR でもよい）．
 - emend には本の情報を入れない（emend の `CLAUDE.md`）．
 
 ## 共通部分を変えるとき

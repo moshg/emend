@@ -14,9 +14,9 @@ tex/original-sync.json の "synced" に記録しておく．取り込みで衝�
   - 記録にあるのに忠実版から消えたファイルは NG．
 
 --sync（make sync）:
-  1. 先にすべての前提（記録した版が git にあるか，修正版のファイルがあるか）を確かめ，
+  1. 先にすべての前提（記録した忠実版の中身が git にあるか，修正版のファイルがあるか）を確かめ，
      1 つでも満たさなければ何も変えずに止まる．
-  2. 記録と違う忠実版のファイルについて，記録した版から今の版への変更を
+  2. 記録と違う忠実版のファイルについて，記録した中身から今の忠実版への変更を
      git merge-file で修正版の同じファイルに取り込む．新しい忠実版のファイルは修正版にそのまま写す．
      ファイルごとに記録を更新する（途中で止まっても，取り込んだファイルを二度取り込まない）．
   3. 衝突したファイルは <<<<<<< … >>>>>>> を残し，"unresolved" に挙げる．手で直してから
@@ -28,10 +28,10 @@ tex/original-sync.json の "synced" に記録しておく．取り込みで衝�
 修正版があるのに記録がなければ NG にする（git から戻す）．
 
 ブランチをまとめるときに original-sync.json が衝突したら，make sync をやり直さず，
-各ファイルの行を両側から残し，同じファイルの行はそのファイルを変えた側の値を取る
+両方のブランチの行をすべて残し，両方にあるファイルの行は，そのファイルを変えた側の値を取る
 （git hash-object tex/original/<名前> と一致する）．
 
-記録した版の中身は git から取り出すので，その版が一度はコミットされているか，
+記録した忠実版の中身は git から取り出すので，その中身が一度はコミットされているか，
 --sync が git hash-object -w で書いた object が手元に残っている必要がある．
 """
 from __future__ import annotations
@@ -111,7 +111,7 @@ def sync(synced: dict[str, str], unresolved: list[str], now: dict[str, str]) -> 
             problems.append(f"tex/original/{name} が消えた．修正版の扱いを手で決め，記録から外す")
         elif name in synced:
             if git("cat-file", "-e", synced[name]).returncode != 0:
-                problems.append(f"記録した版 {synced[name]}（tex/original/{name}）が git にない．取り込みは手で行い，記録を直す")
+                problems.append(f"記録した忠実版の中身 {synced[name]}（tex/original/{name}）が git にない．取り込みは手で行い，記録を直す")
             if not (REVISED / name).exists():
                 problems.append(f"tex/revised/{name} がない")
             if name in unresolved:
@@ -146,7 +146,7 @@ def sync(synced: dict[str, str], unresolved: list[str], now: dict[str, str]) -> 
                 print(f"衝突 {r.returncode} か所: tex/revised/{name} の <<<<<<< … >>>>>>> を手で直し，make sync を実行し直す")
             else:
                 print(f"取り込んだ: tex/original/{name} → tex/revised/{name}")
-        # 次に取り込むときの基準として，今の版を git の object に書いておく
+        # 次に取り込むときの基準として，今の忠実版の中身を git の object に書いておく
         w = git("hash-object", "-w", str(orig))
         if w.returncode != 0 or w.stdout.decode().strip() != now[name]:
             print(f"NG: tex/original/{name} を git の object に書けなかった: {w.stderr.decode()}")

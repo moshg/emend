@@ -35,7 +35,7 @@ jobs:
             example/pdf/revised.pdf
 
   # 各本の情報を emend に入れない（CLAUDE.md）．本の名前はここにも書けないので，
-  # 機械的に見つけられる「ほかのリポジトリへのリンク」だけを検査する．本の題名などは本の側の CI が検査する．
+  # 機械的に見つけられる「ほかのリポジトリへの参照」だけを検査する．本の題名などは本の側の CI が検査する．
   no-book-info:
     runs-on: ubuntu-latest
     steps:
