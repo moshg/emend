@@ -2,6 +2,12 @@
 
 本のリポジトリの側で対応が要る変更を書く．新しい順．
 
+## 修正版で足した式・定理類の番号を「原書の番号＋アルファベット」にする
+
+- 修正版の `\tag{…$'$}\label{rev:…}` を `\addtag\label{rev:…}` にし，ラベル名を実際の番号にする（`make check` が「ラベル rev:1.20p の実際の番号が 1.20a」のように教える）．番号は直前に出ている原書の式に付くので，数字が変わることがある．参照と `corrections/*.md` も直す．
+- 番号付きの定理類を足したいときは，本の sty で `\newaddtheorem{addlemma}{補題}` などを定義し，`docs/book.md` に書く．
+- `docs/book.md` にプライムの番号の書き方が残っていれば直す．
+
 ## Makefile で毎回 common/ をそろえる
 
 - 本の `Makefile` の `common/` の取得を，`ifeq` で囲まずに毎回 `git submodule update --init` する形にする（README の見本）．pull で `common/` の指すコミットが進んだのに，手元の `common/` が古いままで，`git add -A` などで古いコミットを指したままコミットしてしまうのを防ぐ．
