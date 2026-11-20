@@ -5,6 +5,7 @@
    ラベルは「接頭辞:原書の番号」（例: thm:1.1.1, eq:1.12）で付ける規約なので，
    ビルド後の aux に書かれた実際の番号がラベル名の番号と一致するかを確かめる．
    一致しなければ，書き起こしで定理や式を取りこぼした／重複させた可能性がある．
+   修正版で足した式・定理類のラベル（rev:1.2a）も，実際の番号と一致するかを確かめる．
 
 2. 修正 ID のチェック
    修正版のソース（tex/revised/ の下の *.tex）の目印 \\fixat{ID} の ID と，
@@ -79,11 +80,11 @@ LOG_PROBLEM_RE = re.compile(
     r"|unreferenced destination"
     r"|duplicate destination"
 )
-LABEL_PREFIXES = ("thm", "eq", "fig", "sec", "ch", "app")
+LABEL_PREFIXES = ("thm", "eq", "fig", "sec", "ch", "app", "rev")
 
 NEWLABEL_RE = re.compile(r"\\newlabel\{(?P<key>[a-z]+):(?P<num>[^}]+)\}\{\{(?P<val>[^}]*)\}")
 FIX_RE = re.compile(r"\\fixat\{(?P<id>[^}]+)\}")
-REVISED_ONLY_RE = re.compile(r"\\(?:fixat|fixskip|supplied|rewritten)\b")
+REVISED_ONLY_RE = re.compile(r"\\(?:fixat|fixskip|supplied|rewritten|addtag)\b|\\label\{rev:")
 CONFLICT_RE = re.compile(r"^(?:<{7}|\|{7}|={7}|>{7})(?: |$)", re.MULTILINE)
 MD_FIX_RE = re.compile(r"^###\s+(?P<id>[0-9A-Z]+-\d+)\b", re.MULTILINE)
 # % から行末まで（\% は文字の %，\\% は改行の後のコメント）
@@ -311,7 +312,7 @@ def check_numbering() -> list[str]:
             diff = "，".join(f"{k} が {a.get(k)} と {b.get(k)}" for k in sorted(set(a) | set(b)) if a.get(k) != b.get(k))
             errors.append(
                 f"{name}: 章の終わりの番号が忠実版と修正版で違う（{diff}）．"
-                f"修正版で式・定理・脚注を足したり消したりしたなら \\tag や \\fixskip で揃える"
+                f"修正版で式・定理類を足したなら \\addtag などで番号を付け，消したなら \\fixskip で揃える"
             )
     return errors
 

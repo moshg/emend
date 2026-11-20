@@ -8,6 +8,7 @@
 %   * \ifrevised                : 修正版のときに真
 %   * \fixat{ID}                : 修正版で修正した箇所の目印（索引にページを載せ，リンク先を置く）
 %   * \fixskip{カウンタ}{数}    : 修正で消した番号を進める
+%   * \addtag，\newaddtheorem   : 修正版で足した式・定理類に原書の番号＋アルファベットの番号を振る
 %   * \recordchaptercounts{名前}: 章の終わりのカウンタを aux に書く（2 つの版の番号の一致の検査に使う）
 %   * \supplied{…}，\rewritten{…} : 原書にない議論を［補完］［書き換え］の印で囲む
 %   * \printfixindex            : 修正版の巻末に置く修正箇所の索引
@@ -67,7 +68,22 @@
 % \fixskip{カウンタ}{数}
 %   修正で式や定理を消したとき，その後に置いて，消した分だけ番号を進める．
 %   これで以降の番号が原書（忠実版）と一致する．番号の一致は make check が確かめる．
-\newcommand\fixskip[2]{\addtocounter{#1}{#2}}
+%   \stepcounter と同じく，従属するカウンタ（\addtag のアルファベットなど）は 0 に戻す．
+\newcommand\fixskip[2]{\addtocounter{#1}{#2}%
+  \begingroup\let\@elt\emend@zerocounter\csname cl@#1\endcsname\endgroup}
+\def\emend@zerocounter#1{\global\csname c@#1\endcsname\z@\csname cl@#1\endcsname}
+% \addtag，\newaddtheorem{環境}{見出し}
+%   修正版で足した式・定理類に，直前の原書の番号にアルファベットを付けた番号 (1.2a)，補題 1.2.3a を振る．
+%   原書の番号のカウンタは進めない．\addtag は equation* や align* の行で \tag の代わりに書く．
+%   \newaddtheorem は本の sty で，カウンタ theorem を共有する定理環境を作った後に使う．
+\newcounter{emend@addeq}\counterwithin*{emend@addeq}{equation}
+\newcommand\addtag{\stepcounter{emend@addeq}%
+  \protected@edef\emend@addnum{\theequation\alph{emend@addeq}}%
+  \expandafter\tag\expandafter{\emend@addnum}}
+\newcommand\newaddtheorem[2]{%
+  \@ifundefined{c@emend@addthm}{\newcounter{emend@addthm}\counterwithin*{emend@addthm}{theorem}%
+    \renewcommand\theemend@addthm{\thetheorem\alph{emend@addthm}}}{}%
+  \newtheorem{#1}[emend@addthm]{#2}}
 % \recordchaptercounts{名前}
 %   main.tex の章の差し込み口が，章を読み込んだ後に呼ぶ．章ごとにリセットされるカウンタ（節・式・
 %   定理・脚注など）の章の終わりの値を aux に書く．common/scripts/check.py が忠実版と修正版で比べ，
@@ -161,11 +177,16 @@
 % 相互参照
 %   ラベルは「接頭辞:原書の番号」で付ける（thm:1.1.1，eq:1.12，fig:1.1，sec:1.1，ch:1 など）．
 %   参照先がまだ TeX 化されていない場合は，ラベル名の番号部分をそのまま表示する．
+%   ただし rev: ラベル（修正版で足した式・定理類）は必ずあるので普通に \ref で参照し，
+%   ないときは LaTeX の警告を make check がエラーにする（名前を変えた後の古い参照に気づける）．
 %   common/scripts/check.py が「ラベル名の番号」と「実際の番号」の一致を検査する．
 % ---------------------------------------------------------------------------
 \def\emend@splitlabel#1:#2\@nil{#2}
+\def\emend@labelprefix#1:#2\@nil{#1}
+\def\emend@alwaysref@rev{}
 \newcommand\bref[1]{%
-  \@ifundefined{r@#1}{\emend@splitlabel#1\@nil}{\ref{#1}}}
+  \@ifundefined{emend@alwaysref@\emend@labelprefix#1\@nil}%
+    {\@ifundefined{r@#1}{\emend@splitlabel#1\@nil}{\ref{#1}}}{\ref{#1}}}
 \newcommand\beqref[1]{\textup{(\bref{#1})}}
 
 \endinput
