@@ -1,4 +1,4 @@
-# action の版の更新を PR で知らせる．
+# action のバージョンの更新を PR で知らせる．
 # TeX Live のイメージは scripts/tex で固定している（更新の手順は docs/texlive.md）．
 version: 2
 updates:

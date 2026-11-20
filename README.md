@@ -35,7 +35,7 @@ tex/
   main.tex, original.tex, revised.tex
   original/                 各章の本文（忠実版）
   revised/                  各章の本文（修正版）
-  original-sync.json        最後に修正版へ取り込んだ忠実版の記録（make sync が書く）
+  original-sync.json        最後に修正版へ取り込んだときの忠実版の記録（各ファイルの blob ID．make sync が書く）
 corrections/                修正のまとめ
 .gitignore                  tex/build/，pdf/
 .claude/settings.json       セッションの開始時に common/ を取得し，emend の CLAUDE.md を読み込まない
@@ -50,15 +50,13 @@ corrections/                修正のまとめ
 git submodule add https://github.com/moshg/emend.git common
 ```
 
-**Makefile**: `common/` がまだ取得されていなければ取得してから読み込む．本ごとのターゲット（原書の PDF の取得など）は `include` の後に書く（前に書くと `make` の既定のターゲットになる）．先頭のコメントは `make help` に出る．
+**Makefile**: 毎回 `common/` を，本のリポジトリが指しているコミットにそろえてから読み込む（まだなければ取得する．pull で `common/` の指すコミットが進んだのに，手元の `common/` が古いままで，古いコミットを指したままコミットしてしまうのを防ぐ）．本ごとのターゲット（原書の PDF の取得など）は `include` の後に書く（前に書くと `make` の既定のターゲットになる）．先頭のコメントは `make help` に出る．
 
 ```make
 # 『…』TeX 化プロジェクト
 # make source    原書の PDF を Release「source」から resources/ に取得する（gh が要る）
 
-ifeq ($(wildcard common/make/book.mk),)
 $(shell git submodule update --init >&2)
-endif
 include common/make/book.mk
 ```
 
@@ -84,9 +82,9 @@ include common/make/book.mk
 ```yaml
 on:
   push:
-    paths: [..., "common"]        # common/ の参照の更新でも動かす
+    paths: [..., "common", ".gitmodules", ".github/emend-denylist.txt"]   # common/ の指すコミットが変わったときも動かす
   pull_request:
-    paths: [..., "common"]
+    paths: [..., "common", ".gitmodules", ".github/emend-denylist.txt"]
 ...
       - uses: actions/checkout@v7
         with:
@@ -94,12 +92,15 @@ on:
       - name: common/ が emend の main に入っている
         run: |
           git -C common fetch --quiet --unshallow origin main || git -C common fetch --quiet origin main
-          git -C common merge-base --is-ancestor HEAD origin/main
+          if ! git -C common merge-base --is-ancestor HEAD FETCH_HEAD; then
+            echo "::error::common/ が emend の main にないコミットを指している"; exit 1
+          fi
       - name: common/ に本の情報が入っていない
         run: |
-          if grep -rnIiF -f .github/emend-denylist.txt common/; then
-            echo "::error::common/ に本の情報がある"; exit 1
-          fi
+          rc=0
+          grep -rnIiF -f .github/emend-denylist.txt common/ || rc=$?
+          if [ "$rc" -eq 0 ]; then echo "::error::common/ に本の情報がある"; exit 1; fi
+          if [ "$rc" -ne 1 ]; then echo "::error::禁止語の検査ができなかった"; exit 1; fi
 ```
 
 **`.github/dependabot.yml`**: `common/` の更新を PR で知らせる．`updates:` に次を足す．
@@ -114,7 +115,7 @@ on:
 **`CLAUDE.md`**: 少なくとも次を書く．
 
 - 規約は `common/docs/conventions.md`，進め方は `common/docs/workflow.md`，本ごとの事情は `docs/book.md`．
-- `common/` は emend の submodule で，この中のファイルは本のリポジトリでは編集しない．直すときは emend のブランチで直して PR を出し，マージされてから `common/` の参照を更新する（Dependabot の PR でもよい）．
+- `common/` は emend の submodule で，この中のファイルは本のリポジトリでは編集しない．直すときは emend のブランチで直して PR を出し，マージされてから `common/` が指すコミットを更新する（Dependabot の PR でもよい）．
 - emend には本の情報を入れない（emend の `CLAUDE.md`）．
 
 ## 共通部分を変えるとき
