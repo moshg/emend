@@ -8,7 +8,7 @@
 | latexmk の共通の設定 | `tex/latexmkrc` |
 | make のターゲット（`make`，`make check`，`make sync` など） | `make/book.mk` |
 | TeX を Docker で動かす | `scripts/tex` |
-| 整合性チェック（ラベル番号，2 つの版の番号，参照とリンク，修正 ID，注記，原書のページ境界，しおり，印，衝突の残り） | `scripts/check.py` |
+| 整合性チェック（ラベル番号，参照とリンク，消した参照先，修正 ID，注記，原書のページ境界，しおり，印，衝突の残り） | `scripts/check.py` |
 | 補完・書き換えの印の置き場所と種類の検査 | `scripts/marks.py` |
 | 忠実版と修正版の差分の検査（目印のない変更，印のない補完．警告のみ） | `scripts/changes.py` |
 | 忠実版の変更が修正版に取り込まれているかの検査と，その取り込み（`make sync`） | `scripts/check_original.py` |

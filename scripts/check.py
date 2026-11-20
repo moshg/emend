@@ -3,9 +3,9 @@
 
 1. ラベルの番号チェック
    ラベルは「接頭辞:原書の番号」（例: thm:1.1.1, eq:1.12）で付ける規約なので，
-   ビルド後の aux に書かれた実際の番号がラベル名の番号と一致するかを確かめる．
+   忠実版のビルド後の aux に書かれた実際の番号がラベル名の番号と一致するかを確かめる．
    一致しなければ，書き起こしで定理や式を取りこぼした／重複させた可能性がある．
-   修正版で足した式・定理類のラベル（rev:1.2a）も，実際の番号と一致するかを確かめる．
+   修正版は番号を変えてよいので検査しない．
 
 2. 修正 ID のチェック
    修正版のソース（tex/revised/ の下の *.tex）の目印 \\fixat{ID} の ID と，
@@ -39,11 +39,11 @@
    （LuaTeX の ``unreferenced destination''），飛び先の重複の警告がないかを確かめる．
    これらの警告ではビルドは止まらず，長い出力に埋もれやすいので，ここでエラーにする．
 
-8. 2 つの版の番号のチェック（エラー）
-   忠実版と修正版の両方にあるラベルは，同じ番号でなければならない．また，両方にある章の終わりの
-   カウンタの値（節・式・定理・脚注など．\\recordchaptercounts が aux に書く）も同じでなければならない．
-   修正版で式や定理，脚注を消したり足したりして以降の番号がずれていないかを確かめる
-   （直し方は common/docs/conventions.md の「番号」）．
+8. 修正版で消した参照先のチェック（エラー）
+   修正版のソースの \\bref，\\beqref が，忠実版にはあるが修正版にはないラベル（修正版で消した
+   式や定理）を指していないかを確かめる．\\bref はまだ TeX 化していない章を指せるよう，未定義の
+   ラベルをラベル名の番号で黙って表示するので，7 の検査では見つからない．修正版は番号を変えてよいので，
+   その番号が別の式や定理を指していることがある．
 
 9. マージの衝突の残りのチェック（エラー）
    make sync（忠実版の変更を修正版に取り込む）で衝突した箇所の印
@@ -69,7 +69,8 @@ from pathlib import Path
 
 from book import CORRECTIONS, ORIGINAL, REVISED, ROOT, require_root
 
-AUX_FILES = [ROOT / "tex/build/original.aux", ROOT / "tex/build/revised.aux"]
+ORIGINAL_AUX = ROOT / "tex/build/original.aux"
+REVISED_AUX = ROOT / "tex/build/revised.aux"
 LOG_FILES = [ROOT / "tex/build/original.log", ROOT / "tex/build/revised.log"]
 # ログの 1 行に収まる警告だけを見る（TeX はログを 79 文字で折り返すので，名前の途中で切れることはあるが検出はできる）
 LOG_PROBLEM_RE = re.compile(
@@ -80,9 +81,10 @@ LOG_PROBLEM_RE = re.compile(
     r"|unreferenced destination"
     r"|duplicate destination"
 )
-LABEL_PREFIXES = ("thm", "eq", "fig", "sec", "ch", "app", "rev")
+LABEL_PREFIXES = ("thm", "eq", "fig", "sec", "ch", "app")
 
 NEWLABEL_RE = re.compile(r"\\newlabel\{(?P<key>[a-z]+):(?P<num>[^}]+)\}\{\{(?P<val>[^}]*)\}")
+BREF_RE = re.compile(r"\\b(?:eq)?ref\{(?P<key>[^}]+)\}")
 FIX_RE = re.compile(r"\\fixat\{(?P<id>[^}]+)\}")
 REVISED_ONLY_RE = re.compile(r"\\(?:fixat|fixskip|supplied|rewritten|addtag)\b|\\label\{rev:")
 CONFLICT_RE = re.compile(r"^(?:<{7}|\|{7}|={7}|>{7})(?: |$)", re.MULTILINE)
@@ -96,22 +98,38 @@ def strip_comments(text: str) -> str:
 
 
 def check_labels() -> list[str]:
+    """忠実版のラベル名の番号と実際の番号が一致するか（修正版は番号を変えてよいので見ない）．"""
+    if not ORIGINAL_AUX.exists():
+        return ["忠実版の aux ファイルがない．先に make でビルドすること"]
     errors: list[str] = []
-    found_any = False
-    for aux in AUX_FILES:
-        if not aux.exists():
+    for m in NEWLABEL_RE.finditer(ORIGINAL_AUX.read_text(encoding="utf-8")):
+        if m["key"] not in LABEL_PREFIXES:
             continue
-        found_any = True
-        for m in NEWLABEL_RE.finditer(aux.read_text(encoding="utf-8")):
-            if m["key"] not in LABEL_PREFIXES:
-                continue
-            val = m["val"].lstrip("{")  # \tag を使った式は {{{1.22}}} のように括弧が多い
-            if m["num"] != val:
+        val = m["val"].lstrip("{")  # \tag を使った式は {{{1.22}}} のように括弧が多い
+        if m["num"] != val:
+            errors.append(f"{ORIGINAL_AUX.name}: ラベル {m['key']}:{m['num']} の実際の番号が {val} になっている")
+    return errors
+
+
+def aux_labels(aux: Path) -> set[str]:
+    return {f"{m['key']}:{m['num']}" for m in NEWLABEL_RE.finditer(aux.read_text(encoding="utf-8"))}
+
+
+def check_deleted_refs() -> list[str]:
+    """修正版の \\bref，\\beqref が，修正版で消した（忠実版にだけある）ラベルを指していないか．"""
+    if not ORIGINAL_AUX.exists() or not REVISED_AUX.exists():
+        return ["aux ファイルがそろっていない．先に make で両版をビルドすること"]
+    deleted = aux_labels(ORIGINAL_AUX) - aux_labels(REVISED_AUX)
+    errors: list[str] = []
+    for tex in sorted(REVISED.rglob("*.tex")):
+        text = strip_comments(tex.read_text(encoding="utf-8"))
+        for m in BREF_RE.finditer(text):
+            if m["key"] in deleted:
+                line = text.count("\n", 0, m.start()) + 1
                 errors.append(
-                    f"{aux.name}: ラベル {m['key']}:{m['num']} の実際の番号が {val} になっている"
+                    f"{tex.relative_to(ROOT)}:{line}: {m['key']} は修正版で消えている"
+                    "（\\bref はラベル名の番号を黙って表示するので，別の式や定理を指すことがある）．参照を直す"
                 )
-    if not found_any:
-        errors.append("aux ファイルがない．先に make でビルドすること")
     return errors
 
 
@@ -279,44 +297,6 @@ def check_logs() -> list[str]:
     return errors
 
 
-def read_labels(aux: Path) -> dict[str, str]:
-    return {f"{m['key']}:{m['num']}": m["val"].lstrip("{") for m in NEWLABEL_RE.finditer(aux.read_text(encoding="utf-8"))}
-
-
-COUNTS_RE = re.compile(r"\\[a-z]+@counts\{(?P<name>[^}]+)\}\{(?P<vals>[^}]*)\}")
-
-
-def read_counts(aux: Path) -> dict[str, str]:
-    """章の終わりのカウンタの値（\\recordchaptercounts が aux に書いたもの）．"""
-    return {m["name"]: " ".join(m["vals"].split()) for m in COUNTS_RE.finditer(aux.read_text(encoding="utf-8"))}
-
-
-def check_numbering() -> list[str]:
-    """忠実版と修正版に共通するラベルの番号と，両方にある章の終わりのカウンタの値が一致するか．"""
-    if not all(aux.exists() for aux in AUX_FILES):
-        return ["aux ファイルがそろっていない．先に make で両版をビルドすること"]
-    orig, rev = (read_labels(aux) for aux in AUX_FILES)
-    errors = [
-        f"ラベル {key} の番号が忠実版では {orig[key]}，修正版では {rev[key]}（修正版で番号がずれている）"
-        for key in sorted(set(orig) & set(rev))
-        if orig[key] != rev[key]
-    ]
-    oc, rc = (read_counts(aux) for aux in AUX_FILES)
-    if not oc:
-        errors.append("aux に章の終わりのカウンタの値がない（main.tex の差し込み口が \\recordchaptercounts を呼んでいるか確かめる）")
-    for name in sorted(set(oc) & set(rc)):
-        if not (ORIGINAL / f"{name}.tex").exists() or not (REVISED / f"{name}.tex").exists():
-            continue
-        if oc[name] != rc[name]:
-            a, b = dict(x.split("=") for x in oc[name].split()), dict(x.split("=") for x in rc[name].split())
-            diff = "，".join(f"{k} が {a.get(k)} と {b.get(k)}" for k in sorted(set(a) | set(b)) if a.get(k) != b.get(k))
-            errors.append(
-                f"{name}: 章の終わりの番号が忠実版と修正版で違う（{diff}）．"
-                f"修正版で式・定理類を足したなら \\addtag などで番号を付け，消したなら \\fixskip で揃える"
-            )
-    return errors
-
-
 def check_conflicts() -> list[str]:
     errors: list[str] = []
     for tex in sorted(REVISED.rglob("*.tex")):
@@ -350,8 +330,8 @@ def main() -> int:
         return 1
     errors = (
         check_labels()
-        + check_numbering()
         + check_logs()
+        + check_deleted_refs()
         + check_fix_ids()
         + check_notes()
         + check_origpages()
@@ -367,7 +347,7 @@ def main() -> int:
         print(f"NG: {e}")
     if errors:
         return 1
-    print("OK: ラベル番号・2 つの版の番号・参照とリンク・修正 ID・注記の欄・原書のページ境界の印・補完と書き換えの印・衝突の残り・しおりの題名はすべて整合している")
+    print("OK: ラベル番号・参照とリンク・消した参照先・修正 ID・注記の欄・原書のページ境界の印・補完と書き換えの印・衝突の残り・しおりの題名はすべて整合している")
     return 0
 
 
