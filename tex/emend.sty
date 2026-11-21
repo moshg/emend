@@ -8,8 +8,8 @@
 %   * \ifrevised                : 修正版のときに真
 %   * \fixat{ID}                : 修正版で修正した箇所の目印（索引にページを載せ，リンク先を置く）
 %   * \fixskip{カウンタ}{数}    : 修正で消した番号を進める
-%   * \addtag，\newaddtheorem   : 修正版で足した式・定理類に原書の番号＋アルファベットの番号を振る
-%   * \recordchaptercounts{名前}: 章の終わりのカウンタを aux に書く（2 つの版の番号の一致の検査に使う）
+%   * \addtag，\newaddtheorem   : 修正版で足した式・定理類に直前の番号＋アルファベットの番号を振る
+%   * \recordchaptercounts{名前}: 章の終わりのカウンタを aux に書く（いまは検査に使っていない．本の main.tex が呼ぶので残している）
 %   * \supplied{…}，\rewritten{…} : 原書にない議論を［補完］［書き換え］の印で囲む
 %   * \printfixindex            : 修正版の巻末に置く修正箇所の索引
 %   * \origpage{n}              : 原書のページ境界を余白に表示
@@ -67,14 +67,14 @@
   \emend@next}
 % \fixskip{カウンタ}{数}
 %   修正で式や定理を消したとき，その後に置いて，消した分だけ番号を進める．
-%   これで以降の番号が原書（忠実版）と一致する．番号の一致は make check が確かめる．
+%   以降の番号を原書（忠実版）と同じに保ちたいときに使う（make check は確かめない）．
 %   \stepcounter と同じく，従属するカウンタ（\addtag のアルファベットなど）は 0 に戻す．
 \newcommand\fixskip[2]{\addtocounter{#1}{#2}%
   \begingroup\let\@elt\emend@zerocounter\csname cl@#1\endcsname\endgroup}
 \def\emend@zerocounter#1{\global\csname c@#1\endcsname\z@\csname cl@#1\endcsname}
 % \addtag，\newaddtheorem{環境}{見出し}
-%   修正版で足した式・定理類に，直前の原書の番号にアルファベットを付けた番号 (1.2a)，補題 1.2.3a を振る．
-%   原書の番号のカウンタは進めない．\addtag は equation* や align* の行で \tag の代わりに書く．
+%   修正版で足した式・定理類に，直前の番号にアルファベットを付けた番号 (1.2a)，補題 1.2.3a を振る．
+%   番号のカウンタは進めない．\addtag は equation* や align* の行で \tag の代わりに書く．
 %   \newaddtheorem は本の sty で，カウンタ theorem を共有する定理環境を作った後に使う．
 \newcounter{emend@addeq}\counterwithin*{emend@addeq}{equation}
 \newcommand\addtag{\stepcounter{emend@addeq}%
@@ -86,8 +86,8 @@
   \newtheorem{#1}[emend@addthm]{#2}}
 % \recordchaptercounts{名前}
 %   main.tex の章の差し込み口が，章を読み込んだ後に呼ぶ．章ごとにリセットされるカウンタ（節・式・
-%   定理・脚注など）の章の終わりの値を aux に書く．common/scripts/check.py が忠実版と修正版で比べ，
-%   ラベルのない式や脚注の番号のずれも見つける．
+%   定理・脚注など）の章の終わりの値を aux に書く．以前は common/scripts/check.py が忠実版と修正版で
+%   比べていたが，修正版の番号を原書と一致させる規約をやめたので，いまは何も読まない．
 \def\emend@counts#1#2{}
 \newcommand\recordchaptercounts[1]{%
   \begingroup
@@ -179,7 +179,8 @@
 %   参照先がまだ TeX 化されていない場合は，ラベル名の番号部分をそのまま表示する．
 %   ただし rev: ラベル（修正版で足した式・定理類）は必ずあるので普通に \ref で参照し，
 %   ないときは LaTeX の警告を make check がエラーにする（名前を変えた後の古い参照に気づける）．
-%   common/scripts/check.py が「ラベル名の番号」と「実際の番号」の一致を検査する．
+%   忠実版では common/scripts/check.py が「ラベル名の番号」と「実際の番号」の一致を検査する
+%   （修正版は番号を変えてよいので検査しない）．
 % ---------------------------------------------------------------------------
 \def\emend@splitlabel#1:#2\@nil{#2}
 \def\emend@labelprefix#1:#2\@nil{#1}
