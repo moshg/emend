@@ -2,6 +2,15 @@
 
 本のリポジトリの側で対応が要る変更を書く．新しい順．
 
+## 手順と注意点の文書を分け，レビュー担当のエージェントを置く
+
+`common/docs/` を，作業する担当が読む `workflow.md`（手順）・`conventions.md`（書き方）と，`reviewer` エージェントが読む `review.md`（注意点と制約）に分けた．校正，レビュー，最終検証は `reviewer` に頼む．
+
+- `.claude/agents/reviewer.md` を `common/agents/reviewer.md` へのシンボリックリンクにし，`CLAUDE.md` の読む文書を直す（どちらも README の「入れ方」）．
+- `CLAUDE.md` や `docs/book.md` が古い節の名前（`conventions.md` の「原書の誤りを見つけたとき」「新しい章を追加する手順」，`workflow.md` の「対象」「書き方」「レビュー」など）を引いていれば直す．
+- レビューの観点を依頼文に書き並べる雛形などがあれば消す（観点は `review.md` にあり，依頼文には種類と範囲だけを書く）．
+- `docs/book.md` は作業する担当も読む．本ごとの注意点や制約（避ける書き方，判断の基準など）を書いているなら，`docs/book-review.md` に移す（`reviewer` だけが読む）．
+
 ## 修正版の番号を原書と一致させる規約と検査をやめる
 
 - `docs/book.md` に，修正版の番号を原書と一致させる決まりや「2 つの版の番号」の検査のことが書いてあれば消す．`\fixskip` はそのまま使える．`\recordchaptercounts` は main.tex から呼んだままでよい（いまは何にも使わない）．
