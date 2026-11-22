@@ -20,7 +20,7 @@
    （「．」で区切って数える．忠実版の文と SIMILAR 以上似ている文は，忠実版の文を直したものとみなして数えない）が
    MIN_SENTENCES 文以上ある修正を探す．その ID の種類が補完・注記・簡略化・書き換えなのに，\\supplied も
    \\rewritten もなければ（外側の印に覆われているものは除く）警告する．
-   common/docs/conventions.md の「修正版」の基準で印を付けるか確かめる．
+   common/docs/conventions.md の「印」の基準で印を付けるか確かめる．
 
 make check から呼ばれる．
 """

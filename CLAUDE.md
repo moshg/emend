@@ -24,3 +24,4 @@ CI（`.github/workflows/ci.yml` の `no-book-info`）は，同じ owner のほ�
 
 - 文書とコメントは日本語の「である調」で，句読点は「，」「．」．
 - 規約と進め方（`docs/`）は，どの本にも当てはまる書き方にする．本のリポジトリの `docs/book.md` から上書きできることを前提にする．
+- 作業する担当がルールに引っ張られすぎないよう，`docs/workflow.md`（手順）と `docs/conventions.md`（書き方）には手順と書き方だけを書き，注意点，制約，判断の基準は `docs/review.md`（`reviewer` エージェントが読む）に書く．同じことを両方に書かない．

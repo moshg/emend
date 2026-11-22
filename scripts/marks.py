@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """修正版の本文で，原書にない議論を囲む印（\\supplied と \\rewritten）の検査.
 
-印を付ける基準（common/docs/conventions.md の「修正版」）:
+印を付ける基準（common/docs/conventions.md の「印」と common/docs/review.md の「どの作業にも当てはまること」）:
   - 修正 ID の一覧の種類に「簡略化」か「書き換え」を含む修正は \\rewritten（［書き換え］…［書き換えここまで］），
     そうでなく「補完」か「注記」を含む修正は \\supplied（［補完］…［補完ここまで］）で囲む．
   - 囲むのは，原文にない文が 3 文以上ある修正だけ．1〜2 文の追加には付けない（これは人が判断する）．
