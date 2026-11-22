@@ -18,9 +18,9 @@
 2. 印のない補完・書き換え
    かたまりの中の各文を，その文の終わりより前で最後の \\fixat の修正に割り当て，忠実版にない文
    （「．」で区切って数える．忠実版の文と SIMILAR 以上似ている文は，忠実版の文を直したものとみなして数えない）が
-   MIN_SENTENCES 文以上ある修正を探す．その ID の種類が補完・注記・簡略化・書き換えなのに，\\supplied も
+   1 文でもある修正を探す．その ID の種類が補完・注記・簡略化・書き換えなのに，\\supplied も
    \\rewritten もなければ（外側の印に覆われているものは除く）警告する．
-   common/docs/conventions.md の「修正版」の基準で印を付けるか確かめる．
+   common/docs/conventions.md の「印」の基準で印を付けるか確かめる．
 
 make check から呼ばれる．
 """
@@ -37,10 +37,11 @@ from marks import COMMENT_RE, MARK_RE, blank_comments, fix_kinds, group_end, mar
 
 GAP = 5  # 間に残った行がこれ以下で，どれも trivial ならまとめる
 GAP_ANY = 2  # 間に残った行がこれ以下なら，中身によらずまとめる
-MIN_SENTENCES = 3
 ANCHOR_GAP = 80  # 変わらない部分がこの字数以上続く所で変更のまとまりを区切る．まとまりごとに目印が要る
 SIMILAR = 0.6  # これ以上似ている文は，忠実版の文を直したものとみなす（新しい文に数えない）
 FIXAT_RE = re.compile(r"\\fixat\{(?P<id>[^}]+)\}")
+# 文から除いて何も残らなければ，新しい文に数えない（目印，環境の始まりと終わり，括弧，空白）
+BARE_RE = re.compile(r"\\fixat\{[^}]*\}|\\(?:begin|end)\{[^}]*\}(?:\[[^\]]*\])?|[{}\s．]")
 
 
 @dataclass
@@ -218,15 +219,20 @@ def check() -> tuple[list[str], list[str]]:
                 owner = [k for k, m in enumerate(anchors) if m.start() < sent_end]
                 if not owner:
                     continue
-                if any(cs <= sent_start and sent_end <= ce for cs, ce in covered):
-                    continue  # 印の中
-                if all(similar_in(x, old) for x in sentences(body[sent_start:sent_end])):
+                # 印の外にある部分だけを見る（印の境目にまたがる文の，印の中の部分は数えない）
+                outside = "".join(
+                    ch for i, ch in enumerate(body[sent_start:sent_end], sent_start)
+                    if not any(cs <= i < ce for cs, ce in covered)
+                )
+                if not BARE_RE.sub("", outside):
+                    continue  # 印の中か，目印・環境・括弧だけ
+                if all(similar_in(x, old) for x in sentences(outside)):
                     continue
                 new_count[owner[-1]] = new_count.get(owner[-1], 0) + 1
             for k, n in new_count.items():
                 m = anchors[k]
                 fid = m["id"]
-                if n < MIN_SENTENCES or not mark_for_kind(kinds.get(fid, "")):
+                if not mark_for_kind(kinds.get(fid, "")):
                     continue
                 if any(cs <= m.start() < ce for cs, ce in covered):
                     continue
@@ -250,7 +256,7 @@ def main() -> int:
     for w in ws:
         print(f"要確認: {w}")
     if not ws:
-        print("OK: 修正版の変更にはすべて目印があり，印の要りそうな補完・書き換えには印がある")
+        print("OK: 修正版の変更にはすべて目印があり，補完・書き換えには印がある")
     return 0
 
 

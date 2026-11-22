@@ -13,8 +13,10 @@
 | 忠実版と修正版の差分の検査（目印のない変更，印のない補完．警告のみ） | `scripts/changes.py` |
 | 忠実版の変更が修正版に取り込まれているかの検査と，その取り込み（`make sync`） | `scripts/check_original.py` |
 | 2 つの PDF をページの画像で比べる | `scripts/pdfdiff.py` |
-| 書き起こしの規約 | [docs/conventions.md](docs/conventions.md) |
-| 作業の進め方（並列作業，校正，証明の簡略化・補完，レビュー） | [docs/workflow.md](docs/workflow.md) |
+| 作業の手順（書き起こし，校正，原書の誤りの修正，証明の簡略化・補完，並列作業） | [docs/workflow.md](docs/workflow.md) |
+| ソースと修正のまとめの書き方 | [docs/conventions.md](docs/conventions.md) |
+| 作業の注意点と制約（レビュー担当の `reviewer` エージェントが読む） | [docs/review.md](docs/review.md) |
+| `reviewer` エージェントの定義（本のリポジトリの `.claude/agents/` からリンクする） | `agents/reviewer.md` |
 | TeX の実行環境と TeX Live の更新 | [docs/texlive.md](docs/texlive.md) |
 | 見本の本（架空の内容．CI でビルドして検査する） | `example/` |
 | 本のリポジトリで対応が要る変更の記録 | [CHANGELOG.md](CHANGELOG.md) |
@@ -28,6 +30,7 @@ common/                     emend（submodule）
 Makefile                    include common/make/book.mk ＋本ごとのターゲット
 CLAUDE.md                   common/ の扱い，読む文書
 docs/book.md                本ごとの事情（番号の付け方，環境，文献の表示，記号，担当と ID の表，具体例）
+docs/book-review.md         本ごとの注意点と制約（あれば．reviewer だけが読む）
 tex/
   latexmkrc                 do '../common/tex/latexmkrc' or die "common/ を読めない（git submodule update --init）: $@$!\n";
   <本>.sty                  hyperref → emend → 見た目
@@ -39,6 +42,7 @@ tex/
 corrections/                修正のまとめ
 .gitignore                  tex/build/，pdf/
 .claude/settings.json       セッションの開始時に common/ を取得し，emend の CLAUDE.md を読み込まない
+.claude/agents/reviewer.md  → ../../common/agents/reviewer.md（シンボリックリンク）
 .github/workflows/build-pdf.yml
 .github/dependabot.yml      common/ の更新を PR で知らせる
 .github/emend-denylist.txt  common/ に入っていてはいけない語（題名，著者名，リポジトリ名など．1 行に 1 語，空行を入れない）
@@ -75,6 +79,12 @@ include common/make/book.mk
   },
   "claudeMdExcludes": ["**/common/CLAUDE.md"]
 }
+```
+
+**`.claude/agents/reviewer.md`**: レビュー担当のエージェント．emend の `agents/reviewer.md` へのシンボリックリンクにする（emend 自体では登録されないよう，emend では `.claude/` の外に置いている）．クラウドのセッションでは，SessionStart のフックが `common/` を取得した後に読み込まれる．
+
+```sh
+mkdir -p .claude/agents && ln -s ../../common/agents/reviewer.md .claude/agents/reviewer.md
 ```
 
 **`.github/workflows/build-pdf.yml`**: 次を足す．
@@ -114,7 +124,7 @@ on:
 
 **`CLAUDE.md`**: 少なくとも次を書く．
 
-- 規約は `common/docs/conventions.md`，進め方は `common/docs/workflow.md`，本ごとの事情は `docs/book.md`．
+- 作業の手順は `common/docs/workflow.md`，書き方は `common/docs/conventions.md`，本ごとの事情は `docs/book.md`．作業の注意点と制約は `common/docs/review.md` と `docs/book-review.md` にあり，`reviewer` エージェントが読む（作業する担当は読まない）．
 - `common/` は emend の submodule で，この中のファイルは本のリポジトリでは編集しない．直すときは emend のブランチで直して PR を出し，マージされてから `common/` が指すコミットを更新する（Dependabot の PR でもよい）．
 - emend には本の情報を入れない（emend の `CLAUDE.md`）．
 
