@@ -2,7 +2,7 @@
 
 ## ビルドの仕組み
 
-LuaLaTeX（`ltjsbook`）を Docker で動かす．TeX をホストに入れる必要はない（ホストに要るのは Docker，`make`，`python3`，`git`）．`make` は本のリポジトリのルートで `common/scripts/tex latexmk …` を実行し，`common/scripts/tex` が本のリポジトリを含む作業ツリーをコンテナにマウントして，その中の `tex/` で latexmk を動かす．`tex/latexmkrc` が読む `common/tex/latexmkrc` が，`common/tex/`（`emend.sty` のある場所）を TeX の探索パスに足す．
+LuaLaTeX を Docker で動かす（クラスは本ごとに決める．見本の本は `ltjsbook`．`emend.sty` には `ltjsbook` のときだけ効く補正がある）．TeX をホストに入れる必要はない（ホストに要るのは Docker，`make`，`python3`，`git`）．`make` は本のリポジトリのルートで `common/scripts/tex latexmk …` を実行し，`common/scripts/tex` が本のリポジトリを含む作業ツリーをコンテナにマウントして，その中の `tex/` で latexmk を動かす．`tex/latexmkrc` が読む `common/tex/latexmkrc` が，`common/tex/`（`emend.sty` のある場所）を TeX の探索パスに足す．
 
 - TeX は TeX Live 2026（[Island of TeX](https://gitlab.com/islandoftex/images/texlive) のイメージ `registry.gitlab.com/islandoftex/images/texlive` の full）で，`scripts/tex` でタグとダイジェストを固定している．手元でも GitHub Actions でも同じ TeX が動く．最初の `make` でイメージ（約 2.8GB，展開後は約 9GB）が自動で取得される．
 - フォントのキャッシュを `tex/build/texmf-cache/` に残しているので，変更のないときの `make` はすぐ終わる．章のファイルを新しく置いたときは，`latexmkrc` がファイルの一覧の変化に気づいてビルドし直す．

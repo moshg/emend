@@ -17,7 +17,7 @@
 
 2. 印のない補完・書き換え
    かたまりの中の各文を，その文の終わりより前で最後の \\fixat の修正に割り当て，忠実版にない文
-   （「．」で区切って数える．忠実版の文と SIMILAR 以上似ている文は，忠実版の文を直したものとみなして数えない）が
+   （SENTENCE_END_RE で区切って数える．忠実版の文と SIMILAR 以上似ている文は，忠実版の文を直したものとみなして数えない）が
    1 文でもある修正を探す．その ID の種類が補完・注記・簡略化・書き換えなのに，\\supplied も
    \\rewritten もなければ（外側の印に覆われているものは除く）警告する．
    common/docs/conventions.md の「印」の基準で印を付けるか確かめる．
@@ -39,6 +39,9 @@ GAP = 5  # 間に残った行がこれ以下で，どれも trivial ならまと
 GAP_ANY = 2  # 間に残った行がこれ以下なら，中身によらずまとめる
 ANCHOR_GAP = 80  # 変わらない部分がこの字数以上続く所で変更のまとまりを区切る．まとまりごとに目印が要る
 SIMILAR = 0.6  # これ以上似ている文は，忠実版の文を直したものとみなす（新しい文に数えない）
+# 文の終わり: 全角の「．」「。」と，空白・\・}・行末が続く欧文のピリオド（句読点が「, .」の本のため．
+# 1.5 のような数の中のピリオドは区切らない）
+SENTENCE_END_RE = re.compile(r"[．。]|\.(?=[\s\\}]|$)")
 FIXAT_RE = re.compile(r"\\fixat\{(?P<id>[^}]+)\}")
 # 文から除いて何も残らなければ，新しい文に数えない（目印，環境の始まりと終わり，括弧，空白）
 BARE_RE = re.compile(r"\\fixat\{[^}]*\}|\\(?:begin|end)\{[^}]*\}(?:\[[^\]]*\])?|[{}\s．]")
@@ -145,8 +148,9 @@ def unanchored_changes(o: str, r: str) -> list[int]:
 def sentences(text: str) -> list[str]:
     text = MARK_RE.sub("{", text)  # 印の命令名を消す（中身は残す）
     text = re.sub(r"\\fixat\{[^}]*\}|\\fixskip\{[^}]*\}\{[^}]*\}|\\origpage\{[^}]*\}", "", text)
-    text = re.sub(r"\s+", "", blank_comments(text))
-    return [s for s in text.split("．") if s]
+    # 空白を除く前に文の終わりで区切る（欧文のピリオドは後ろの空白で見分ける）
+    parts = SENTENCE_END_RE.split(blank_comments(text))
+    return [s for s in (re.sub(r"\s+", "", p) for p in parts) if s]
 
 
 def similar_in(s: str, old: list[str]) -> bool:
@@ -193,6 +197,10 @@ def check() -> tuple[list[str], list[str]]:
             if any(cs <= s0 and e0 - 1 <= ce for cs, ce in covered):
                 pass  # かたまり全体が印の中
             elif not ids:
+                # 目印がなくても，変更がすべて印の中にあるなら（印の始まりの目印は前のかたまりにある）よい
+                at_list = [s0 + pos for pos in unanchored_changes(o, r)]
+                if all(any(cs <= at < ce for cs, ce in covered) for at in at_list):
+                    continue
                 head = re.sub(r"\s+", " ", r.strip())[:60]
                 unmarked_changes.append(f"{where}: 変更に \\fixat がない: {head}…")
                 continue
@@ -209,11 +217,12 @@ def check() -> tuple[list[str], list[str]]:
                     )
             # 修正ごとの範囲は分からないので，かたまりの各文を，その文の終わりより前で最後の \fixat の修正に数える
             old = sentences(o)
+            old_text = "".join(old)
             body = blank_comments(rev_text)
             anchors = list(FIXAT_RE.finditer(body, s0, e0))
             new_count: dict[int, int] = {}
             pos = s0
-            for end in [m.end() for m in re.finditer("．", body[s0:e0])] + [e0 - s0]:
+            for end in [m.end() for m in SENTENCE_END_RE.finditer(body[s0:e0])] + [e0 - s0]:
                 sent_start, sent_end = pos, s0 + end
                 pos = sent_end
                 owner = [k for k, m in enumerate(anchors) if m.start() < sent_end]
@@ -226,7 +235,8 @@ def check() -> tuple[list[str], list[str]]:
                 )
                 if not BARE_RE.sub("", outside):
                     continue  # 印の中か，目印・環境・括弧だけ
-                if all(similar_in(x, old) for x in sentences(outside)):
+                # 印の前後に残った原文の切れ端（文の途中で印が始まるときなど）は，忠実版の文章に含まれていれば新しい文に数えない
+                if all(similar_in(x, old) or x in old_text for x in sentences(outside)):
                     continue
                 new_count[owner[-1]] = new_count.get(owner[-1], 0) + 1
             for k, n in new_count.items():
