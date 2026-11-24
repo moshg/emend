@@ -1,8 +1,8 @@
-% examplebook.sty --- 見本の本の見た目．本ごとの sty はこの形で，hyperref，emend の順に読んでから見た目を書く．
+% examplebook.sty --- 見本の本の見た目．本ごとの sty はこの形で，hyperref と emend を読んでから見た目を書く．
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{examplebook}
 \RequirePackage{amsmath,amssymb,amsthm}
-\RequirePackage[hidelinks]{hyperref}% hyperref は emend より先に読む
+\RequirePackage[hidelinks]{hyperref}
 \RequirePackage{emend}
 
 % 原書ページ境界のマーカー（\origpage）の余白

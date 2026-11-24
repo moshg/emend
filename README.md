@@ -4,7 +4,7 @@
 
 | 中身 | 場所 |
 |---|---|
-| 版の切り替え，`\fixat`，`\fixskip`，足した式・定理類の番号（`\addtag`，`\newaddtheorem`），章の終わりのカウンタの記録，［補完］［書き換え］の印，修正箇所の索引，原書のページ境界，参照 | `tex/emend.sty` |
+| 版の切り替え，`\fixat`，`\fixskip`，足した式・定理類の番号（`\addtag`，`\newaddtheorem`），［補完］［書き換え］の印，原書のページ境界，参照 | `tex/emend.sty` |
 | latexmk の共通の設定 | `tex/latexmkrc` |
 | make のターゲット（`make`，`make check`，`make sync` など） | `make/book.mk` |
 | TeX を Docker で動かす | `scripts/tex` |
@@ -33,7 +33,7 @@ docs/book.md                本ごとの事情（番号の付け方，環境，�
 docs/book-review.md         本ごとの注意点と制約（あれば．reviewer だけが読む）
 tex/
   latexmkrc                 do '../common/tex/latexmkrc' or die "common/ を読めない（git submodule update --init）: $@$!\n";
-  <本>.sty                  hyperref → emend → 見た目
+  <本>.sty                  hyperref，emend → 見た目
   notation.sty              記号のマクロ
   main.tex, original.tex, revised.tex
   original/                 各章の本文（忠実版）
@@ -64,7 +64,7 @@ $(shell git submodule update --init >&2)
 include common/make/book.mk
 ```
 
-**本の sty**: hyperref を（オプションを付けるならそれも）emend より先に読み，emend を読んでから見た目を書く（`example/tex/examplebook.sty` が見本）．索引の前置きの最初の文（`\fixindexlead`）と，`\origpage` と印の色（`origpagecolor`，`fixmarkcolor`）は，読んだ後で変えてよい．
+**本の sty**: hyperref と emend を読んでから見た目を書く（`example/tex/examplebook.sty` が見本）．`\origpage` と印の色（`origpagecolor`，`fixmarkcolor`）は，読んだ後で変えてよい．
 
 **main.tex，original.tex，revised.tex**: `example/tex/` が見本．
 

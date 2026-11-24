@@ -4,13 +4,12 @@
 \hypersetup{pdftitle={距離の小冊子\ifrevised（修正版）\else（書き起こし）\fi}}
 
 % 章ファイルの差し込み口．忠実版は tex/original/，修正版は tex/revised/ にあるものだけが読み込まれる．
-% \bookchapter{N}{名前} は章番号を N-1 に合わせてから読み込み，章の終わりのカウンタを記録する．
+% \bookchapter{N}{名前} は章番号を N-1 に合わせてから読み込む．
 \providecommand{\BookMode}{original}
-\newcommand\bookchapter[2]{\setcounter{chapter}{\numexpr#1-1\relax}\InputIfFileExists{\BookMode/#2}{}{}\recordchaptercounts{#2}}
+\newcommand\bookchapter[2]{\setcounter{chapter}{\numexpr#1-1\relax}\InputIfFileExists{\BookMode/#2}{}{}}
 
 \begin{document}
 \mainmatter
 \bookchapter{1}{ch01}   % 1 距離
 \bookchapter{2}{ch02}   % 2 （まだない章．参照は番号だけ出る）
-\printfixindex
 \end{document}

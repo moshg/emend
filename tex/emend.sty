@@ -6,28 +6,22 @@
 %
 % 主な機能
 %   * \ifrevised                : 修正版のときに真
-%   * \fixat{ID}                : 修正版で修正した箇所の目印（索引にページを載せ，リンク先を置く）
+%   * \fixat{ID}                : 修正版で修正した箇所の目印（PDF には何も出さない）
 %   * \fixskip{カウンタ}{数}    : 修正で消した番号を進める
 %   * \addtag，\newaddtheorem   : 修正版で足した式・定理類に直前の番号＋アルファベットの番号を振る
-%   * \recordchaptercounts{名前}: 章の終わりのカウンタを aux に書く（いまは検査に使っていない．本の main.tex が呼ぶので残している）
 %   * \supplied{…}，\rewritten{…} : 原書にない議論を［補完］［書き換え］の印で囲む
-%   * \printfixindex            : 修正版の巻末に置く修正箇所の索引
 %   * \origpage{n}              : 原書のページ境界を余白に表示
 %   * \bref, \beqref            : 未 TeX 化の章を参照しても原書の番号で表示される参照
 %
-% 見た目（定理環境，見出し，箇条書き，\term，文献の \bcite，余白など）は本ごとの sty に書く．
-% 本ごとの sty では，hyperref を（オプションを付けるならそれも）この sty より先に読む．
+% 見た目（定理環境，見出し，箇条書き，\term，文献の \bcite，余白など）と hyperref の読み込みは本ごとの sty に書く．
 %
 % 本ごとに変えてよいもの（この sty を読んだ後で）
-%   \fixindexlead               : 索引の前置きの最初の文（\renewcommand で変える）
 %   origpagecolor               : \origpage の色（\definecolor で変える）
 %   fixmarkcolor                : ［補完］［書き換え］の印の色（\definecolor で変える）
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{emend}[2026/11/16 Faithful and revised editions of a book]
+\ProvidesPackage{emend}[2026/11/23 Faithful and revised editions of a book]
 
 \RequirePackage{xcolor}
-\RequirePackage{enumitem}
-\RequirePackage{hyperref}
 
 % ltjsbook: since TeX Live 2026 it adds 第 and 章 to chapter numbers when the
 % table of contents is typeset, not when the entry is written, so appendix
@@ -35,8 +29,6 @@
 \@ifclassloaded{ltjsbook}{%
   \g@addto@macro\appendix{\addtocontents{toc}{%
     \protect\def\protect\@chapapp{\protect\appendixname}\protect\def\protect\@chappos{}}}}{}
-
-\newcommand\fixindexlead{この版では原書の誤植などを修正している．}
 
 % ---------------------------------------------------------------------------
 % 版（忠実版 / 修正版）
@@ -50,20 +42,14 @@
 \definecolor{origpagecolor}{gray}{0.55}
 
 % \fixat{ID}
-%   修正版のソース（tex/revised/）で，修正した箇所の先頭に置く目印．本文には何も出さない．
-%   巻末の修正箇所の索引にそのページを載せ，索引からのリンク先を置く．
+%   修正版のソース（tex/revised/）で，修正した箇所の先頭に置く目印．PDF には何も出さない．
 %   ID は corrections/*.md の見出しの ID と一致させる（common/scripts/check.py で検査）．
-%   数式中でも使える．見出しの引数や \item[…] の中には置かない（目次やしおりに紛れ込む）．
-\newcounter{emend@fixocc}
-\def\emend@curfixid{}
+%   数式中でも使える．見出しの引数の中には置かない（しおりに ID が紛れ込むことがある）．
 %   \fixat が別表示の式の直後など，行の先頭（まだ何もない）にあるときは，その後の空白
 %   （\fixat の後の改行）を読み飛ばす．読み飛ばさないと，式の次の行の頭に空白が入る．
 \NewDocumentCommand\fixat{m}{%
-  \stepcounter{emend@fixocc}%
-  \ifhmode\ifnum\lastnodetype=\m@ne\let\emend@next\ignorespaces\else\let\emend@next\relax\fi
-  \else\let\emend@next\relax\fi
-  \emend@fixanchor{#1}%
-  \gdef\emend@curfixid{#1}%
+  \let\emend@next\relax
+  \ifhmode\ifnum\lastnodetype=\m@ne\let\emend@next\ignorespaces\fi\fi
   \emend@next}
 % \fixskip{カウンタ}{数}
 %   修正で式や定理を消したとき，その後に置いて，消した分だけ番号を進める．
@@ -84,87 +70,20 @@
   \@ifundefined{c@emend@addthm}{\newcounter{emend@addthm}\counterwithin*{emend@addthm}{theorem}%
     \renewcommand\theemend@addthm{\thetheorem\alph{emend@addthm}}}{}%
   \newtheorem{#1}[emend@addthm]{#2}}
-% \recordchaptercounts{名前}
-%   main.tex の章の差し込み口が，章を読み込んだ後に呼ぶ．章ごとにリセットされるカウンタ（節・式・
-%   定理・脚注など）の章の終わりの値を aux に書く．以前は common/scripts/check.py が忠実版と修正版で
-%   比べていたが，修正版の番号を原書と一致させる規約をやめたので，いまは何も読まない．
-\def\emend@counts#1#2{}
-\newcommand\recordchaptercounts[1]{%
-  \begingroup
-    \def\@elt##1{ ##1=\the\value{##1}}%
-    \immediate\write\@auxout{\string\emend@counts{#1}{\cl@chapter}}%
-  \endgroup}
 % \supplied{…}，\rewritten{…}
 %   修正版で原書にない議論を囲む．本文で始まりと終わりに
-%   ［補完］…［補完ここまで］，［書き換え］…［書き換えここまで］の印を出し，
-%   巻末の索引でも直前の \fixat の ID に「（補完）」「（書き換え）」と付ける．
+%   ［補完］…［補完ここまで］，［書き換え］…［書き換えここまで］の印を出す．
 %   \fixat{ID} の直後か，\fixat{ID}\begin{proof} の直後に置く（common/scripts/marks.py で検査）．
 %   数式の中では使わない．
 \definecolor{fixmarkcolor}{gray}{0.4}
-\NewDocumentCommand\supplied{+m}{\emend@marked{supplied}{補完}{#1}}
-\NewDocumentCommand\rewritten{+m}{\emend@marked{rewritten}{書き換え}{#1}}
-\long\def\emend@marked#1#2#3{%
+\NewDocumentCommand\supplied{+m}{\emend@marked{補完}{#1}}
+\NewDocumentCommand\rewritten{+m}{\emend@marked{書き換え}{#1}}
+\long\def\emend@marked#1#2{%
   % 印の後の空きは伸びてよい（印の分だけ長くなった行が，長い数式の手前で組めなくなるのを防ぐ）
-  \ifvmode\leavevmode\fi\emend@markbox{#2}\hskip\z@\@plus\zw
-  \protected@write\@auxout{}{\string\emend@markedid{\emend@curfixid}{#1}}%
-  #3%
-  \ifvmode\noindent\fi\emend@markbox{#2ここまで}}
+  \ifvmode\leavevmode\fi\emend@markbox{#1}\hskip\z@\@plus\zw
+  #2%
+  \ifvmode\noindent\fi\emend@markbox{#1ここまで}}
 \def\emend@markbox#1{{\footnotesize\gtfamily\textcolor{fixmarkcolor}{［#1］}}}
-\def\emend@markedid#1#2{\expandafter\gdef\csname emend@marked@#2@#1\endcsname{}}
-\def\emend@fixanchor#1{%
-  \ifvmode
-    % 段落間では直前の空きの前に印を置き，\addvspace による空きの統合を妨げない
-    \skip@\lastskip\ifdim\skip@=\z@\else\vskip-\skip@\fi
-    \emend@fixmarks{#1}%
-    \ifdim\skip@=\z@\else\vskip\skip@\fi
-  \else
-    \emend@fixmarks{#1}%
-  \fi}
-\def\emend@fixmarks#1{%
-  \ifhmode\Hy@raisedlink{\hypertarget{fix:#1:\arabic{emend@fixocc}}{}}%
-  \else\hypertarget{fix:#1:\arabic{emend@fixocc}}{}\fi
-  \protected@write\@auxout{}{\string\emend@fixloc{#1}{\thepage}{\arabic{emend@fixocc}}}}
-% aux から修正箇所のページを集める（aux は \begin{document} で読まれる）
-\def\emend@fixids{}
-\def\emend@fixloc#1#2#3{%
-  \@ifundefined{emend@fixpages@#1}{%
-    \expandafter\gdef\csname emend@fixpages@#1\endcsname{}%
-    \g@addto@macro\emend@fixids{\emend@fixitem{#1}}}{}%
-  % 同じページに同じ ID が複数あるときは最初の 1 つだけ載せる
-  \expandafter\ifx\csname emend@fixlast@#1\endcsname\relax\else
-    \edef\emend@tmp{\csname emend@fixlast@#1\endcsname}\def\emend@tmpb{#2}%
-  \fi
-  \ifx\emend@tmp\emend@tmpb\else
-    \expandafter\g@addto@macro\csname emend@fixpages@#1\endcsname{\emend@fixpage{#2}{#1:#3}}%
-  \fi
-  \expandafter\gdef\csname emend@fixlast@#1\endcsname{#2}%
-  \let\emend@tmp\relax\let\emend@tmpb\@empty}
-\let\emend@tmp\relax
-% 文書末尾での aux 再読み込み時には何もしない
-\long\def\emend@gobblethree#1#2#3{}
-\AtEndDocument{\let\emend@fixloc\emend@gobblethree\let\emend@markedid\@gobbletwo}
-\def\emend@fixpage#1#2{\hyperlink{fix:#2}{p.\,#1}\space}
-\def\emend@fixitem#1{\item[\texttt{#1}] \csname emend@fixpages@#1\endcsname
-  \@ifundefined{emend@marked@supplied@#1}{}{（補完）}\@ifundefined{emend@marked@rewritten@#1}{}{（書き換え）}}
-% 修正版の巻末に置く索引
-\newcommand\printfixindex{%
-  \ifrevised
-    \chapter*{修正箇所の索引}
-    \addcontentsline{toc}{chapter}{修正箇所の索引}
-    \fixindexlead 修正箇所の ID と掲載ページを以下に示す．
-    各修正の内容と理由はリポジトリの \texttt{corrections/} 以下の文書にまとめてある．
-    本文で\emend@markbox{補完}から\emend@markbox{補完ここまで}までの部分は原書にない議論を補ったもの，
-    \emend@markbox{書き換え}から\emend@markbox{書き換えここまで}までの部分は原書の議論を書き換えたもので，
-    下の一覧ではそれぞれ「（補完）」「（書き換え）」と示す．
-    \par\medskip
-    \ifx\emend@fixids\@empty
-      （修正箇所はない）
-    \else
-      \begin{description}[font=\normalfont,labelwidth=4em,leftmargin=5em]
-        \emend@fixids
-      \end{description}
-    \fi
-  \fi}
 
 % ---------------------------------------------------------------------------
 % 原書ページ境界のマーカー
