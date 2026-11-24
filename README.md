@@ -4,7 +4,7 @@
 
 | 中身 | 場所 |
 |---|---|
-| 版の切り替え，`\fixat`，`\fixskip`，足した式・定理類の番号（`\addtag`，`\newaddtheorem`），章の終わりのカウンタの記録，［補完］［書き換え］の印，原書のページ境界，参照 | `tex/emend.sty` |
+| 版の切り替え，`\fixat`，`\fixskip`，足した式・定理類の番号（`\addtag`，`\newaddtheorem`），［補完］［書き換え］の印，原書のページ境界，参照 | `tex/emend.sty` |
 | latexmk の共通の設定 | `tex/latexmkrc` |
 | make のターゲット（`make`，`make check`，`make sync` など） | `make/book.mk` |
 | TeX を Docker で動かす | `scripts/tex` |

@@ -9,7 +9,6 @@
 %   * \fixat{ID}                : 修正版で修正した箇所の目印（PDF には何も出さない）
 %   * \fixskip{カウンタ}{数}    : 修正で消した番号を進める
 %   * \addtag，\newaddtheorem   : 修正版で足した式・定理類に直前の番号＋アルファベットの番号を振る
-%   * \recordchaptercounts{名前}: 章の終わりのカウンタを aux に書く（いまは検査に使っていない．本の main.tex が呼ぶので残している）
 %   * \supplied{…}，\rewritten{…} : 原書にない議論を［補完］［書き換え］の印で囲む
 %   * \origpage{n}              : 原書のページ境界を余白に表示
 %   * \bref, \beqref            : 未 TeX 化の章を参照しても原書の番号で表示される参照
@@ -71,16 +70,6 @@
   \@ifundefined{c@emend@addthm}{\newcounter{emend@addthm}\counterwithin*{emend@addthm}{theorem}%
     \renewcommand\theemend@addthm{\thetheorem\alph{emend@addthm}}}{}%
   \newtheorem{#1}[emend@addthm]{#2}}
-% \recordchaptercounts{名前}
-%   main.tex の章の差し込み口が，章を読み込んだ後に呼ぶ．章ごとにリセットされるカウンタ（節・式・
-%   定理・脚注など）の章の終わりの値を aux に書く．以前は common/scripts/check.py が忠実版と修正版で
-%   比べていたが，修正版の番号を原書と一致させる規約をやめたので，いまは何も読まない．
-\def\emend@counts#1#2{}
-\newcommand\recordchaptercounts[1]{%
-  \begingroup
-    \def\@elt##1{ ##1=\the\value{##1}}%
-    \immediate\write\@auxout{\string\emend@counts{#1}{\cl@chapter}}%
-  \endgroup}
 % \supplied{…}，\rewritten{…}
 %   修正版で原書にない議論を囲む．本文で始まりと終わりに
 %   ［補完］…［補完ここまで］，［書き換え］…［書き換えここまで］の印を出す．
