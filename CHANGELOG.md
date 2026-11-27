@@ -13,7 +13,7 @@
 
 章の終わりのカウンタを aux に書く `\recordchaptercounts` は，番号を原書と一致させる検査をやめてから何にも使っていなかったので，なくした．
 
-- main.tex の章の差し込み口（`\bookchapter` など）から `\recordchaptercounts{…}` を消す（命令がなくなったので，残すとビルドが止まる）．
+- main.tex の章を読み込む行（`\bookchapter` など）から `\recordchaptercounts{…}` を消す（命令がなくなったので，残すとビルドが止まる）．
 - 手元では一度 `make clean` してからビルドする（前のビルドの aux に `\emend@counts` の行が残っていて止まるため）．
 
 ## 修正箇所の索引を PDF に出さない
@@ -24,10 +24,10 @@
 - 本の sty から `\renewcommand\fixindexlead{…}` を消す（同じく止まる）．
 - 索引の前置きにあった文（`\fixindexlead` の文，修正の内容と理由が `corrections/` にあること，［補完］［書き換え］の印の意味）も PDF に出なくなる．修正版であることや印の意味を PDF に書いておきたいなら，本のまえがきなどに書く．
 - emend は hyperref を読まなくなった．本の sty で hyperref を読んでいなければ，必ず読む（README の本の sty の形）．読まないとビルドは通るが，リンクとしおりがなくなり，`make check` のリンクとしおりの検査も働かない．hyperref を emend より先に読むという決まりはなくなった．
-- emend は enumitem も読まなくなった．本（sty でも章のファイルでも）で enumitem の命令やオプション（`\setlist`，`\begin{enumerate}[label=…]` など）を使っているなら，本の sty で読む．使っていなくても，enumitem を読むと `description` のラベルの後の空きが変わるので，前と同じ版面にしたいなら本の sty で読む．
+- emend は enumitem も読まなくなった．本（sty でも章のファイルでも）で enumitem の命令やオプション（`\setlist`，`\begin{enumerate}[label=…]` など）を使っているなら，本の sty で読む．使っていなくても，enumitem を読むと `description` のラベルの後の空きが変わるので，前と同じレイアウトにしたいなら本の sty で読む．
 - `docs/book.md` に索引のことが書いてあれば消す．
 - 手元では一度 `make clean` してからビルドする（前のビルドの aux に，なくなったマクロの行が残っていて止まるため）．
-- `\fixat` が本文に何も置かなくなったので，修正版の版面が `\fixat` の周りでわずかに変わる（和文の字間，行や頁の分かれ方）．`common/` の更新の前後で修正版の PDF を比べると，その差が出る．本の sty で enumitem を読まないなら，`description` の版面も両方の版で変わる．
+- `\fixat` が本文に何も置かなくなったので，修正版のレイアウトが `\fixat` の周りでわずかに変わる（和文の字間，改行や改ページの位置）．`common/` の更新の前後で修正版の PDF を比べると，その差が出る．本の sty で enumitem を読まないなら，`description` のレイアウトも両方の版で変わる．
 
 ## 補完・書き換えの印を長さによらず付ける
 
@@ -77,7 +77,7 @@
   - 索引の前置きの最初の文が違うなら `\renewcommand\fixindexlead{…}`，`\origpage` の色が違うなら `\definecolor{origpagecolor}{…}{…}`．
   - `\marginparwidth` などの余白の設定は本の sty に残す（emend は設定しない）．
 - `make check` が，これまで検査していなかった本では新しく次を検査する: 取り下げた ID が修正版に残っていないこと．
-- latexmk は `-halt-on-error` と `-synctex=1` を付けて動かす．監視する章ファイルは `tex/original/`，`tex/revised/`（それぞれ 1 段下のディレクトリまで），`tex/notation/`．
+- latexmk は `-halt-on-error` と `-synctex=1` を付けて動かす．監視する章ファイルは `tex/original/`，`tex/revised/`（それぞれ 1 階層下のディレクトリまで），`tex/notation/`．
 - 規約と進め方は `common/docs/` を見る．本ごとの事情は `docs/book.md` に書く．
 - `.claude/settings.json`，CI，Dependabot，`.github/emend-denylist.txt` は README の「入れ方」に従う．
 - 切り替えた後，手元では一度 `make clean` してからビルドする（前のビルドの aux に，本の sty の古いマクロ名が残っていて止まるため）．
