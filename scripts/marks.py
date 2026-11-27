@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
 """修正版の本文で，原書にない議論を囲む印（\\supplied と \\rewritten）の検査.
 
-印を付ける基準（common/docs/conventions.md の「印」と common/docs/review.md の「どの作業にも当てはまること」）:
-  - 修正 ID の一覧の種類に「簡略化」か「書き換え」を含む修正は \\rewritten（［書き換え］…［書き換えここまで］），
-    そうでなく「補完」か「注記」を含む修正は \\supplied（［補完］…［補完ここまで］）で囲む．
-  - 長さによらず，その種類の修正はすべて囲む（印の付け忘れは common/scripts/changes.py が警告する）．
-  - 印の中にさらに印は付けない（外側の印が覆う）．
-  - 印は，その修正の目印 \\fixat{ID} の直後に置く．修正が 1 つの証明環境だけのときは，
-    \\fixat{ID}\\begin{proof} の直後に置く（\\fixat{ID}\\begin{proof}\\supplied{…}\\end{proof}）．
-
-ここでは，印が目印の直後にあること，印の種類が ID の種類と合うこと，印が入れ子になっていないことを確かめる．
+印の付け方は common/docs/conventions.md の「印」にある．ここでは，印が目印 \\fixat{ID}
+（か \\fixat{ID}\\begin{proof}）の直後にあること，印の種類が ID の種類と合うこと，
+印が入れ子になっていないことを確かめる．印の付け忘れは検査しない（レビューで見る）．
 make check から呼ばれる．
 """
 from __future__ import annotations

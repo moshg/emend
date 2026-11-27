@@ -10,7 +10,6 @@
 | TeX を Docker で動かす | `scripts/tex` |
 | 整合性チェック（ラベル番号，参照とリンク，消した参照先，修正 ID，注記，原書のページ境界，しおり，印，衝突の残り） | `scripts/check.py` |
 | 補完・書き換えの印の置き場所と種類の検査 | `scripts/marks.py` |
-| 忠実版と修正版の差分の検査（目印のない変更，印のない補完．警告のみ） | `scripts/changes.py` |
 | 忠実版の変更が修正版に取り込まれているかの検査と，その取り込み（`make sync`） | `scripts/check_original.py` |
 | 2 つの PDF をページの画像で比べる | `scripts/pdfdiff.py` |
 | 作業の手順（書き起こし，校正，原書の誤りの修正，証明の簡略化・補完，並列作業） | [docs/workflow.md](docs/workflow.md) |
