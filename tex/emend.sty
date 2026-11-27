@@ -45,7 +45,7 @@
 %   修正版のソース（tex/revised/）で，修正した箇所の先頭に置く目印．PDF には何も出さない．
 %   ID は corrections/*.md の見出しの ID と一致させる（common/scripts/check.py で検査）．
 %   数式中でも使える．見出しの引数の中には置かない（しおりに ID が紛れ込むことがある）．
-%   \fixat が別表示の式の直後など，行の先頭（まだ何もない）にあるときは，その後の空白
+%   \fixat が別行立ての式の直後など，行の先頭（まだ何もない）にあるときは，その後の空白
 %   （\fixat の後の改行）を読み飛ばす．読み飛ばさないと，式の次の行の頭に空白が入る．
 \NewDocumentCommand\fixat{m}{%
   \let\emend@next\relax
