@@ -44,7 +44,7 @@ LABEL_PREFIXES = ("thm", "eq", "fig", "sec", "ch", "app")
 NEWLABEL_RE = re.compile(r"\\newlabel\{(?P<key>[a-z]+):(?P<num>[^}]+)\}\{\{(?P<val>[^}]*)\}")
 BREF_RE = re.compile(r"\\b(?:eq)?ref\{(?P<key>[^}]+)\}")
 FIX_RE = re.compile(r"\\fixat\{(?P<id>[^}]+)\}")
-REVISED_ONLY_RE = re.compile(r"\\(?:fixat|fixskip|supplied|rewritten|addtag)\b|\\label\{rev:")
+REVISED_ONLY_RE = re.compile(r"\\(?:fixat|supplied|rewritten)\b|\\label\{rev:")
 CONFLICT_RE = re.compile(r"^(?:<{7}|\|{7}|={7}|>{7})(?: |$)", re.MULTILINE)
 MD_FIX_RE = re.compile(r"^###\s+(?P<id>[0-9A-Z]+-\d+)\b", re.MULTILINE)
 # % から行末まで（\% は文字の %，\\% は改行の後のコメント）

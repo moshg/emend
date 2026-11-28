@@ -4,7 +4,7 @@
 
 | 中身 | 場所 |
 |---|---|
-| 版の切り替え，`\fixat`，修正版で番号が変わった定理類の余白の原書の番号，番号を原書と同じに保つ本の番号（`\fixskip`，`\addtag`，`\newaddtheorem`），［補完］［書き換え］の印，原書のページ境界，参照 | `tex/emend.sty` |
+| 版の切り替え，`\fixat`，［補完］［書き換え］の印，原書のページ境界と番号の余白への表示，参照 | `tex/emend.sty` |
 | latexmk の共通の設定 | `tex/latexmkrc` |
 | make のターゲット（`make`，`make check`，`make sync` など） | `make/book.mk` |
 | TeX を Docker で動かす | `scripts/tex` |
