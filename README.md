@@ -1,6 +1,6 @@
 # emend
 
-本を LaTeX に書き起こし，**原書に忠実な版**（忠実版）と，**誤りを直して証明の簡略化や補完を入れた版**（修正版）の 2 つの PDF を作るための，共通の仕組み．忠実版（`tex/original/`）と修正版（`tex/revised/`）は別のソースで，修正版の直した箇所には目印 `\fixat{ID}` を置き，忠実版を後から直したときは `make sync` で修正版に取り込む．本ごとのリポジトリ（以下「本のリポジトリ」）に submodule として入れて使う．
+本を LaTeX に書き起こし，**原書に忠実な版**（忠実版）と，**誤りを直し，証明の補完や簡略化などの改善を入れた版**（修正版）の 2 つの PDF を作るための，共通の仕組み．忠実版（`tex/original/`）と修正版（`tex/revised/`）は別のソースで，修正版の直した箇所には目印 `\fixat{ID}` を置き，忠実版を後から直したときは `make sync` で修正版に取り込む．本ごとのリポジトリ（以下「本のリポジトリ」）に submodule として入れて使う．
 
 | 中身 | 場所 |
 |---|---|
@@ -12,7 +12,7 @@
 | 補完・書き換えの印の置き場所と種類の検査 | `scripts/marks.py` |
 | 忠実版の変更が修正版に取り込まれているかの検査と，その取り込み（`make sync`） | `scripts/check_original.py` |
 | 2 つの PDF をページの画像で比べる | `scripts/pdfdiff.py` |
-| 作業の手順（書き起こし，校正，原書の誤りの修正，証明の簡略化・補完，並列作業） | [docs/workflow.md](docs/workflow.md) |
+| 作業の手順（書き起こし，校正，原書の誤りの修正，補完と改善，並列作業） | [docs/workflow.md](docs/workflow.md) |
 | ソースと修正のまとめの書き方 | [docs/conventions.md](docs/conventions.md) |
 | 作業の注意点と制約（レビュー担当の `reviewer` エージェントが読む） | [docs/review.md](docs/review.md) |
 | `reviewer` エージェントの定義（本のリポジトリの `.claude/agents/` からリンクする） | `agents/reviewer.md` |
