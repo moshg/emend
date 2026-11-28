@@ -7,8 +7,7 @@
 % 主な機能
 %   * \ifrevised                : 修正版のときに真
 %   * \fixat{ID}                : 修正版で修正した箇所の目印（PDF には何も出さない）
-%   * \fixskip{カウンタ}{数}    : 修正で消した番号を進める
-%   * \addtag，\newaddtheorem   : 修正版で足した式・定理類に直前の番号＋アルファベットの番号を振る
+%   * 修正版で番号が原書と変わった定理類の余白に原書の番号を表示
 %   * \supplied{…}，\rewritten{…} : 原書にない議論を［補完］［書き換え］の印で囲む
 %   * \origpage{n}              : 原書のページ境界を余白に表示
 %   * \bref, \beqref            : 未 TeX 化の章を参照しても原書の番号で表示される参照
@@ -51,25 +50,6 @@
   \let\emend@next\relax
   \ifhmode\ifnum\lastnodetype=\m@ne\let\emend@next\ignorespaces\fi\fi
   \emend@next}
-% \fixskip{カウンタ}{数}
-%   修正で式や定理を消したとき，その後に置いて，消した分だけ番号を進める．
-%   以降の番号を原書（忠実版）と同じに保ちたいときに使う（make check は確かめない）．
-%   \stepcounter と同じく，従属するカウンタ（\addtag のアルファベットなど）は 0 に戻す．
-\newcommand\fixskip[2]{\addtocounter{#1}{#2}%
-  \begingroup\let\@elt\emend@zerocounter\csname cl@#1\endcsname\endgroup}
-\def\emend@zerocounter#1{\global\csname c@#1\endcsname\z@\csname cl@#1\endcsname}
-% \addtag，\newaddtheorem{環境}{見出し}
-%   修正版で足した式・定理類に，直前の番号にアルファベットを付けた番号 (1.2a)，補題 1.2.3a を振る．
-%   番号のカウンタは進めない．\addtag は equation* や align* の行で \tag の代わりに書く．
-%   \newaddtheorem は本の sty で，カウンタ theorem を共有する定理環境を作った後に使う．
-\newcounter{emend@addeq}\counterwithin*{emend@addeq}{equation}
-\newcommand\addtag{\stepcounter{emend@addeq}%
-  \protected@edef\emend@addnum{\theequation\alph{emend@addeq}}%
-  \expandafter\tag\expandafter{\emend@addnum}}
-\newcommand\newaddtheorem[2]{%
-  \@ifundefined{c@emend@addthm}{\newcounter{emend@addthm}\counterwithin*{emend@addthm}{theorem}%
-    \renewcommand\theemend@addthm{\thetheorem\alph{emend@addthm}}}{}%
-  \newtheorem{#1}[emend@addthm]{#2}}
 % \supplied{…}，\rewritten{…}
 %   修正版で原書にない議論を囲む．本文で始まりと終わりに
 %   ［補完］…［補完ここまで］，［書き換え］…［書き換えここまで］の印を出す．
@@ -86,11 +66,23 @@
 \def\emend@markbox#1{{\footnotesize\gtfamily\textcolor{fixmarkcolor}{［#1］}}}
 
 % ---------------------------------------------------------------------------
-% 原書ページ境界のマーカー
+% 原書との対応を余白に出す
+%   \origpage{n}: 原書の p.n がそこから始まる．
+%   修正版では，\label{thm:…} のラベル名の番号（原書の番号）と実際の番号が違えば「原 4.34」を出す．
 % ---------------------------------------------------------------------------
-\newcommand\origpage[1]{%
+\newcommand\emend@margin[1]{%
   \ifvmode\leavevmode\fi
-  \marginpar{\raggedright\tiny\textcolor{origpagecolor}{原 p.#1}}}
+  \marginpar{\raggedright\tiny\textcolor{origpagecolor}{#1}}}
+\newcommand\origpage[1]{\emend@margin{原 p.#1}}
+\def\emend@thm{thm}
+\def\emend@origmark#1{%
+  \edef\emend@a{\emend@labelprefix#1:\@nil}%
+  \ifx\emend@a\emend@thm
+    \edef\emend@a{\emend@splitlabel#1\@nil}\protected@edef\emend@b{\@currentlabel}%
+    \ifx\emend@a\emend@b\else\emend@margin{原 \emend@a}\fi
+  \fi}
+\ifrevised\AtBeginDocument{% hyperref などが \label を定め直した後で包む
+  \let\emend@label\label \def\label#1{\emend@label{#1}\emend@origmark{#1}}}\fi
 
 % ---------------------------------------------------------------------------
 % 相互参照

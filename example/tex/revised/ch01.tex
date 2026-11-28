@@ -32,27 +32,26 @@ $d$ が $X$ 上の距離なら，$d'=\min\{d,1\}$ も $X$ 上の距離である�
 \origpage{2}%
 ここで右辺の各項は $d'$ で置き換えてもよいことに注意する．}
 \end{proof}
-\fixskip{equation}{1}% 書き換えで消した (1.2) の分
 
-後の式の番号は原書と同じである:
+また，次が成り立つ:
 \begin{equation}\label{eq:1.3}
 d'(x,y)\le d(x,y).
 \end{equation}
 
+\fixat{1-09}\supplied{%
+\begin{proposition}\label{rev:1-09}
+任意の $x,y,z,w\in X$ に対して
+\begin{equation}\label{rev:1-09a}
+|d(x,y)-d(z,w)|\le d(x,z)+d(y,w).
+\end{equation}
+\end{proposition}
+\begin{proof}
+命題 \bref{thm:1.1.2} を 2 回使えば \beqref{rev:1-09a} を得る．
+\end{proof}}
+
 \begin{example}\label{thm:1.1.4}
 $\mathbb{R}$ 上で $d(x,y)=|x-y|$ は距離である\fixat{1-05}\supplied{（三角不等式は絶対値の三角不等式）}．
 \end{example}
-
-\fixat{1-09}\supplied{%
-\begin{addproposition}\label{rev:1.1.4a}
-任意の $x,y,z,w\in X$ に対して
-\begin{equation*}\addtag\label{rev:1.3a}
-|d(x,y)-d(z,w)|\le d(x,z)+d(y,w).
-\end{equation*}
-\end{addproposition}
-\begin{proof}
-命題 \bref{thm:1.1.2} を 2 回使えば \beqref{rev:1.3a} を得る．
-\end{proof}}
 
 \section{\texorpdfstring{$\varepsilon$}{ε} 近傍}\label{sec:1.2}
 
